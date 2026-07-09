@@ -17,3 +17,23 @@ export const skjulFacts: ProductFacts = {
     'Kun ekte fakta og garantier',
   ],
 };
+
+export const vedFacts: ProductFacts = {
+  priceFrom: 5990,
+  currency: 'NOK',
+  usps: [
+    'Tørr ved hele vinteren – bratt tak (63°) feller regn og snø, åpne gavler og luftespalter gir gjennomtrekk',
+    'Levert og ferdig montert – vi tar hele jobben',
+    'Ikke søknadspliktig (frittstående)',
+    'Betal først når det står ferdig – ingen forskudd',
+    'Ekte trehåndverk, håndbygd lokalt i Trondheim',
+    'Tre størrelser: ~1 000 / 2 500 / 5 000 liter (fra 5 990 / 9 990 / 14 990 kr)',
+  ],
+  geo: ['Trondheim', 'Melhus', 'Malvik'],
+  honestyRules: [
+    'Rolig, trygg tone – ikke rop, ikke «BILLIGST!» («Bygget for orden», ikke «knalltilbud»)',
+    'Maks 1–2 emoji per innlegg, aldri i overskrift',
+    'Aldri påstander om antall solgte, stjerner eller kundesitater vi ikke har',
+    'Introduksjonspris/hast brukes kun hvis det faktisk stemmer',
+  ],
+};
