@@ -2,6 +2,7 @@ import { db } from '@/db';
 import { posts, postVariants } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { approvePost, rejectPost } from '@/app/actions';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -15,7 +16,7 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
 
   return (
     <main className="mx-auto max-w-3xl p-6 space-y-4">
-      <a href="/" className="text-sm underline">← Innboks</a>
+      <Link href="/" className="text-sm underline">← Innboks</Link>
       <h1 className="text-xl font-semibold">Utkast · {post.status}</h1>
       {variants.map((v) => (
         <div key={v.id} className="rounded border p-4 space-y-2">

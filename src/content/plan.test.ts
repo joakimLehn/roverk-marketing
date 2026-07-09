@@ -8,7 +8,7 @@ describe('plan', () => {
     expect(d > new Date('2026-07-09T00:00:00Z')).toBe(true);
   });
   it('filtrerer maler på ukenummer', () => {
-    const all = [{ week: 1, day: 'Man' }, { week: 2, day: 'Man' }] as any;
+    const all = [{ week: 1, day: 'Man' }, { week: 2, day: 'Man' }];
     expect(templatesForWeek(all, 2)).toHaveLength(1);
   });
 });
