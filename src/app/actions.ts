@@ -6,14 +6,6 @@ import { revalidatePath } from 'next/cache';
 import { generateWeekForChannel } from '@/content/generate-week';
 import { checkGuardrails } from '@/content/guardrails';
 
-export async function approvePost(postId: string, variantId: string) {
-  await db.update(posts).set({ status: 'ready', chosenVariantId: variantId }).where(eq(posts.id, postId));
-  revalidatePath('/');
-}
-export async function rejectPost(postId: string) {
-  await db.update(posts).set({ status: 'rejected' }).where(eq(posts.id, postId));
-  revalidatePath('/');
-}
 export async function chooseVariant(postId: string, variantId: string) {
   await db.update(posts).set({ status: 'ready', chosenVariantId: variantId }).where(eq(posts.id, postId));
   revalidatePath('/');

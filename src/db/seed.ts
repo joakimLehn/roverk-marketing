@@ -8,7 +8,13 @@ import { skjulHashtags } from '../content/hashtags';
 async function main() {
   const [skjul] = await db
     .insert(brands)
-    .values({ slug: 'skjul', name: 'Roverk Skjul', productFacts: skjulFacts, hashtags: skjulHashtags })
+    .values({
+      slug: 'skjul',
+      name: 'Roverk Skjul',
+      productFacts: skjulFacts,
+      hashtags: skjulHashtags,
+      color: '#3B6D11',
+    })
     .returning();
 
   await db.insert(channels).values({

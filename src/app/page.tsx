@@ -1,57 +1,16 @@
 import { db } from '@/db';
 import { posts, channels, brands, calendarTemplates, postVariants } from '@/db/schema';
-import { eq, inArray } from 'drizzle-orm';
-import { WeekBoard } from '@/app/week-board';
+import { and, eq, gte, inArray, lt, ne } from 'drizzle-orm';
+import { TodayQueue } from '@/app/today-queue';
+import type { TodayItem, WeekVariant } from '@/lib/dashboard-types';
 
 export const dynamic = 'force-dynamic';
 
-export type WeekVariant = {
-  id: string;
-  caption: string;
-  hashtags: string[];
-  suggestedAssetTag: string | null;
-  guardrailFlags: string[];
-};
-
-export type WeekPost = {
-  id: string;
-  day: string;
-  scheduledFor: string;
-  format: string;
-  pillar: string;
-  cta: string;
-  status: 'draft' | 'ready' | 'published' | 'rejected';
-  chosenVariantId: string | null;
-  variants: WeekVariant[];
-};
-
-function formatWeekLabel(dates: Date[]): string {
-  if (dates.length === 0) return '';
-  const sorted = [...dates].sort((a, b) => a.getTime() - b.getTime());
-  const start = sorted[0];
-  const end = sorted[sorted.length - 1];
-  const months = ['jan.', 'feb.', 'mars', 'apr.', 'mai', 'juni', 'juli', 'aug.', 'sep.', 'okt.', 'nov.', 'des.'];
-  if (start.getMonth() === end.getMonth()) {
-    return `${start.getDate()}.–${end.getDate()}. ${months[start.getMonth()]}`;
-  }
-  return `${start.getDate()}. ${months[start.getMonth()]} – ${end.getDate()}. ${months[end.getMonth()]}`;
-}
-
 export default async function Home() {
-  const [channel] = await db
-    .select({ id: channels.id, brandName: brands.name })
-    .from(channels)
-    .innerJoin(brands, eq(channels.brandId, brands.id))
-    .where(eq(channels.active, true));
-
-  if (!channel) {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-2 p-6 text-center">
-        <h1 className="text-xl font-heading font-semibold">Ingen aktiv kanal</h1>
-        <p className="text-sm text-muted-foreground">Aktiver en kanal for å se ukens innlegg.</p>
-      </main>
-    );
-  }
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
 
   const rows = await db
     .select({
@@ -59,17 +18,29 @@ export default async function Home() {
       scheduledFor: posts.scheduledFor,
       status: posts.status,
       chosenVariantId: posts.chosenVariantId,
-      day: calendarTemplates.day,
+      platform: channels.platform,
+      brandName: brands.name,
+      brandSlug: brands.slug,
+      brandColor: brands.color,
       format: calendarTemplates.format,
       pillar: calendarTemplates.pillar,
       cta: calendarTemplates.cta,
     })
     .from(posts)
+    .innerJoin(channels, eq(posts.channelId, channels.id))
+    .innerJoin(brands, eq(channels.brandId, brands.id))
     .innerJoin(calendarTemplates, eq(posts.templateId, calendarTemplates.id))
-    .where(eq(posts.channelId, channel.id));
+    .where(
+      and(
+        eq(channels.active, true),
+        ne(posts.status, 'rejected'),
+        gte(posts.scheduledFor, start),
+        lt(posts.scheduledFor, end),
+      ),
+    )
+    .orderBy(posts.scheduledFor);
 
-  const activeRows = rows.filter((r) => r.status !== 'rejected');
-  const postIds = activeRows.map((r) => r.id);
+  const postIds = rows.map((r) => r.id);
 
   const variantRows = postIds.length
     ? await db.select().from(postVariants).where(inArray(postVariants.postId, postIds))
@@ -88,21 +59,31 @@ export default async function Home() {
     variantsByPost.set(v.postId, list);
   }
 
-  const weekPosts: WeekPost[] = activeRows
-    .map((r) => ({
-      id: r.id,
-      day: r.day,
-      scheduledFor: new Date(r.scheduledFor).toISOString(),
-      format: r.format,
-      pillar: r.pillar,
-      cta: r.cta,
-      status: r.status,
-      chosenVariantId: r.chosenVariantId,
-      variants: variantsByPost.get(r.id) ?? [],
-    }))
+  const items: TodayItem[] = rows
+    .map((r): TodayItem | null => {
+      const variants = variantsByPost.get(r.id) ?? [];
+      const chosen = variants.find((v) => v.id === r.chosenVariantId) ?? variants[0] ?? null;
+      if (!chosen) return null;
+      return {
+        postId: r.id,
+        variantId: chosen.id,
+        brandName: r.brandName,
+        brandSlug: r.brandSlug,
+        brandColorStored: r.brandColor,
+        platform: r.platform,
+        format: r.format,
+        pillar: r.pillar,
+        cta: r.cta,
+        scheduledFor: new Date(r.scheduledFor).toISOString(),
+        status: r.status,
+        caption: chosen.caption,
+        hashtags: chosen.hashtags,
+        suggestedAssetTag: chosen.suggestedAssetTag,
+        guardrailFlags: chosen.guardrailFlags,
+      };
+    })
+    .filter((item): item is TodayItem => item !== null)
     .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
 
-  const weekLabel = formatWeekLabel(weekPosts.map((p) => new Date(p.scheduledFor)));
-
-  return <WeekBoard posts={weekPosts} brandName={channel.brandName} weekLabel={weekLabel} />;
+  return <TodayQueue items={items} />;
 }

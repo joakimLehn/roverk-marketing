@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { Image as ImageIcon, TriangleAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { chooseVariant, markPosted, discardPost, editCaption } from '@/app/actions';
-import type { WeekPost } from '@/app/page';
+import type { WeekPost } from '@/lib/dashboard-types';
 
 type Filter = 'all' | 'draft' | 'ready' | 'published';
 

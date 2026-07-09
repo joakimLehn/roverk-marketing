@@ -11,6 +11,7 @@ export const brands = pgTable('brands', {
   toneOverride: text('tone_override'),
   productFacts: jsonb('product_facts').$type<ProductFacts>(),
   hashtags: text('hashtags').array(),
+  color: text('color'),
 });
 
 export const channels = pgTable('channels', {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo, Hanken_Grotesk } from "next/font/google";
+import { Nav } from "@/app/nav";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -27,7 +28,12 @@ export default function RootLayout({
       lang="no"
       className={`${archivo.variable} ${hankenGrotesk.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <div className="mx-auto w-full max-w-[1100px] px-6">
+          <Nav />
+        </div>
+        {children}
+      </body>
     </html>
   );
 }
