@@ -1,10 +1,11 @@
 import 'dotenv/config';
 import { db } from './index';
 import { brands, channels, calendarTemplates } from './schema';
-import { skjulFacts, vedFacts } from '../content/brand-facts';
+import { skjulFacts, vedFacts, ordenFacts } from '../content/brand-facts';
 import { skjulTemplates, SKJUL_CALENDAR_ID } from '../content/calendar-skjul';
 import { vedTemplates, VED_CALENDAR_ID } from '../content/calendar-ved';
-import { skjulHashtags, vedHashtags } from '../content/hashtags';
+import { ordenTemplates, ORDEN_CALENDAR_ID } from '../content/calendar-orden';
+import { skjulHashtags, vedHashtags, ordenHashtags } from '../content/hashtags';
 
 async function main() {
   const [skjul] = await db
@@ -39,6 +40,15 @@ async function main() {
   await db.insert(channels).values({ brandId: ved.id, platform: 'tiktok',   calendarId: VED_CALENDAR_ID, active: false });
   await db.insert(calendarTemplates).values(vedTemplates.map((t) => ({ ...t, calendarId: VED_CALENDAR_ID })));
   console.log('Seed ferdig: Roverk Ved lagt til.');
+
+  const [orden] = await db.insert(brands)
+    .values({ slug: 'orden', name: 'Roverk Orden', productFacts: ordenFacts, hashtags: ordenHashtags, color: '#185FA5' })
+    .returning();
+  await db.insert(channels).values({ brandId: orden.id, platform: 'instagram', calendarId: ORDEN_CALENDAR_ID, active: true });
+  await db.insert(channels).values({ brandId: orden.id, platform: 'facebook', calendarId: ORDEN_CALENDAR_ID, active: false });
+  await db.insert(channels).values({ brandId: orden.id, platform: 'tiktok',   calendarId: ORDEN_CALENDAR_ID, active: false });
+  await db.insert(calendarTemplates).values(ordenTemplates.map((t) => ({ ...t, calendarId: ORDEN_CALENDAR_ID })));
+  console.log('Seed ferdig: Roverk Orden lagt til.');
 }
 
 main();

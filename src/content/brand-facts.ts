@@ -37,3 +37,24 @@ export const vedFacts: ProductFacts = {
     'Introduksjonspris/hast brukes kun hvis det faktisk stemmer',
   ],
 };
+
+export const ordenFacts: ProductFacts = {
+  priceFrom: 3190,
+  currency: 'NOK',
+  usps: [
+    'Kassene alltid inkludert (Stor 60 l / Veldig stor 100 l)',
+    'Levert og ferdig montert – ingen flatpakke, ingen helgeprosjekt',
+    'Betal først når det står ferdig – ingen forskudd',
+    'Kasser henger i kanten på et rack i ekte tre – utnytter hele høyden',
+    'På hjul som tilvalg – trill racket dit du vil',
+    'Rimeligere enn IKEA-hyller kjøpt og bygget selv (levering + montering inkludert)',
+  ],
+  geo: ['Trondheim', 'Melhus', 'Malvik'],
+  honestyRules: [
+    'Rolig, trygg tone – ikke rop, ikke «BILLIGST!» («Bygget for orden», ikke «knalltilbud»)',
+    'Maks 1–2 emoji per innlegg, aldri i overskrift',
+    'Aldri påstander om antall solgte, stjerner eller kundesitater vi ikke har',
+    'IKEA-sammenligning holdes ærlig: «rimeligere enn IKEA-deler levert og montert», aldri «billigst»',
+    'Introduksjonspris/hast brukes kun hvis det faktisk stemmer',
+  ],
+};
