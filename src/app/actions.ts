@@ -14,6 +14,18 @@ export async function rejectPost(postId: string) {
   await db.update(posts).set({ status: 'rejected' }).where(eq(posts.id, postId));
   revalidatePath('/');
 }
+export async function chooseVariant(postId: string, variantId: string) {
+  await db.update(posts).set({ status: 'ready', chosenVariantId: variantId }).where(eq(posts.id, postId));
+  revalidatePath('/');
+}
+export async function markPosted(postId: string) {
+  await db.update(posts).set({ status: 'published' }).where(eq(posts.id, postId));
+  revalidatePath('/');
+}
+export async function discardPost(postId: string) {
+  await db.update(posts).set({ status: 'rejected' }).where(eq(posts.id, postId));
+  revalidatePath('/');
+}
 export async function editCaption(variantId: string, caption: string) {
   const [variant] = await db.select().from(postVariants).where(eq(postVariants.id, variantId));
   if (!variant) return;
