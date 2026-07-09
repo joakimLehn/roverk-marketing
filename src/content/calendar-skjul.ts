@@ -180,7 +180,7 @@ export const skjulTemplates: TemplateSeed[] = [
     platform: 'instagram',
     format: 'Reels',
     pillar: 'Produkt',
-    hook: '6 s teaser + «Fra 5 490 kr»',
+    hook: '6 s teaser med inngangspris (bruk faktisk pris fra fakta)',
     cta: 'Få pris',
   },
   {

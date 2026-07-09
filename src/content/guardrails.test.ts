@@ -15,6 +15,6 @@ describe('checkGuardrails', () => {
     expect(checkGuardrails('«Beste kjøpet vi har gjort» – Kari, Melhus')).toContain('claim:kundesitat');
   });
   it('godtar ærlig, faktabasert tekst', () => {
-    expect(checkGuardrails('Roverk Skjul – fra 5 490 kr. Ikke søknadspliktig. Betal etter montering.')).toEqual([]);
+    expect(checkGuardrails('Roverk Skjul – fra 5 990 kr. Ikke søknadspliktig. Betal etter montering.')).toEqual([]);
   });
 });
