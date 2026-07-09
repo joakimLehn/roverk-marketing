@@ -18,3 +18,9 @@ export const ordenHashtags = [
   '#garasjeinnredning','#kasser','#hjem','#uterom','#verksted','#trehåndverk','#norskehjem','#ryddetips',
   '#roverk','#byggetfororden',
 ];
+
+export const roverkHashtags = [
+  '#roverk','#byggetfororden','#trehåndverk','#norskehjem','#norskdesign','#håndlaget','#ektetre','#kortreist',
+  '#oppbevaring','#orden','#interiør','#uterom','#garasje','#bod','#ryddig',
+  '#trondheim','#trøndelag','#malvik','#melhus','#trondheimsområdet',
+];

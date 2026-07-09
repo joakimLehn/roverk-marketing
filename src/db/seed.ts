@@ -1,11 +1,12 @@
 import 'dotenv/config';
 import { db } from './index';
 import { brands, channels, calendarTemplates } from './schema';
-import { skjulFacts, vedFacts, ordenFacts } from '../content/brand-facts';
+import { skjulFacts, vedFacts, ordenFacts, roverkFacts } from '../content/brand-facts';
 import { skjulTemplates, SKJUL_CALENDAR_ID } from '../content/calendar-skjul';
 import { vedTemplates, VED_CALENDAR_ID } from '../content/calendar-ved';
 import { ordenTemplates, ORDEN_CALENDAR_ID } from '../content/calendar-orden';
-import { skjulHashtags, vedHashtags, ordenHashtags } from '../content/hashtags';
+import { roverkTemplates, ROVERK_CALENDAR_ID } from '../content/calendar-roverk';
+import { skjulHashtags, vedHashtags, ordenHashtags, roverkHashtags } from '../content/hashtags';
 
 async function main() {
   const [skjul] = await db
@@ -49,6 +50,15 @@ async function main() {
   await db.insert(channels).values({ brandId: orden.id, platform: 'tiktok',   calendarId: ORDEN_CALENDAR_ID, active: false });
   await db.insert(calendarTemplates).values(ordenTemplates.map((t) => ({ ...t, calendarId: ORDEN_CALENDAR_ID })));
   console.log('Seed ferdig: Roverk Orden lagt til.');
+
+  const [roverk] = await db.insert(brands)
+    .values({ slug: 'roverk', name: 'Roverk', productFacts: roverkFacts, hashtags: roverkHashtags, color: '#C7924E', toneOverride: 'Paraply-/merkevarekonto: kuratert, roligere frekvens, bygg navnet Roverk og kryss-henvis til produktene (Skjul/Ved/Orden).' })
+    .returning();
+  await db.insert(channels).values({ brandId: roverk.id, platform: 'instagram', calendarId: ROVERK_CALENDAR_ID, active: true });
+  await db.insert(channels).values({ brandId: roverk.id, platform: 'facebook', calendarId: ROVERK_CALENDAR_ID, active: false });
+  await db.insert(channels).values({ brandId: roverk.id, platform: 'tiktok',   calendarId: ROVERK_CALENDAR_ID, active: false });
+  await db.insert(calendarTemplates).values(roverkTemplates.map((t) => ({ ...t, calendarId: ROVERK_CALENDAR_ID })));
+  console.log('Seed ferdig: Roverk (morselskap) lagt til.');
 }
 
 main();

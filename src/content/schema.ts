@@ -16,7 +16,7 @@ export type GenerationResult = z.infer<typeof generationResultSchema>;
 export type GenerationInput = {
   brandName: string;
   toneNotes: string;
-  facts: { priceFrom: number; currency: string; usps: string[]; geo: string[]; honestyRules: string[] };
+  facts: { priceFrom?: number; currency: string; usps: string[]; geo: string[]; honestyRules: string[] };
   template: { format: string; pillar: string; hook: string; cta: string; notes?: string };
   hashtagBank: string[];
 };

@@ -58,3 +58,21 @@ export const ordenFacts: ProductFacts = {
     'Introduksjonspris/hast brukes kun hvis det faktisk stemmer',
   ],
 };
+
+export const roverkFacts: ProductFacts = {
+  currency: 'NOK',
+  usps: [
+    'Norsk trehåndverk — oppbevaringsløsninger som varer',
+    'Produktfamilie: Roverk Skjul (søppelkasseskjul), Roverk Ved (vedskjul), Roverk Orden (oppbevaringsrack)',
+    'Levert og ferdig montert — vi tar hele jobben',
+    'Betal først når det står ferdig',
+    'Ekte tre, håndbygd lokalt i Trondheim',
+  ],
+  geo: ['Trondheim', 'Malvik', 'Melhus', 'Stjørdal', 'Klæbu', 'Heimdal'],
+  honestyRules: [
+    'Rolig, kuratert merkevare-tone — bygg navnet «Roverk», ikke selg én enkelt pris',
+    'Maks 1–2 emoji per innlegg, aldri i overskrift',
+    'Aldri oppdiktede omtaler, stjerner, antall solgte eller «kjent fra»',
+    'Hvert innlegg bør peke mot minst ett produkt (Skjul/Ved/Orden)',
+  ],
+};

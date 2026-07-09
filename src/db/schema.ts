@@ -89,7 +89,7 @@ export const logs = pgTable('logs', {
 });
 
 export type ProductFacts = {
-  priceFrom: number;
+  priceFrom?: number;
   currency: string;
   usps: string[];
   geo: string[];
