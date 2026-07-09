@@ -25,6 +25,9 @@ export default async function PostDetail({ params }: { params: Promise<{ id: str
           )}
           <p className="whitespace-pre-wrap">{v.caption}</p>
           <p className="text-sm text-muted-foreground">{v.hashtags.join(' ')}</p>
+          {v.suggestedAssetTag && (
+            <p className="text-xs text-muted-foreground">Foreslått asset: <span className="font-mono">{v.suggestedAssetTag}</span></p>
+          )}
           <form action={approvePost.bind(null, post.id, v.id)}>
             <Button type="submit" disabled={(v.guardrailFlags?.length ?? 0) > 0}>Godkjenn denne varianten</Button>
           </form>

@@ -3,11 +3,12 @@ import { db } from './index';
 import { brands, channels, calendarTemplates } from './schema';
 import { skjulFacts } from '../content/brand-facts';
 import { skjulTemplates, SKJUL_CALENDAR_ID } from '../content/calendar-skjul';
+import { skjulHashtags } from '../content/hashtags';
 
 async function main() {
   const [skjul] = await db
     .insert(brands)
-    .values({ slug: 'skjul', name: 'Roverk Skjul', productFacts: skjulFacts })
+    .values({ slug: 'skjul', name: 'Roverk Skjul', productFacts: skjulFacts, hashtags: skjulHashtags })
     .returning();
 
   await db.insert(channels).values({

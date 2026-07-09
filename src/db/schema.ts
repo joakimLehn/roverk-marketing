@@ -10,6 +10,7 @@ export const brands = pgTable('brands', {
   name: text('name').notNull(),
   toneOverride: text('tone_override'),
   productFacts: jsonb('product_facts').$type<ProductFacts>(),
+  hashtags: text('hashtags').array(),
 });
 
 export const channels = pgTable('channels', {
@@ -65,6 +66,7 @@ export const postVariants = pgTable('post_variants', {
   caption: text('caption').notNull(),
   hashtags: text('hashtags').array().notNull(),
   suggestedAssetId: uuid('suggested_asset_id').references(() => assets.id),
+  suggestedAssetTag: text('suggested_asset_tag'),
   model: text('model').notNull(),
   guardrailFlags: jsonb('guardrail_flags').$type<string[]>().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

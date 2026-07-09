@@ -4,6 +4,7 @@ import { posts, postVariants } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { generateWeekForChannel } from '@/content/generate-week';
+import { checkGuardrails } from '@/content/guardrails';
 
 export async function approvePost(postId: string, variantId: string) {
   await db.update(posts).set({ status: 'ready', chosenVariantId: variantId }).where(eq(posts.id, postId));
@@ -14,7 +15,11 @@ export async function rejectPost(postId: string) {
   revalidatePath('/');
 }
 export async function editCaption(variantId: string, caption: string) {
-  await db.update(postVariants).set({ caption }).where(eq(postVariants.id, variantId));
+  const [variant] = await db.select().from(postVariants).where(eq(postVariants.id, variantId));
+  if (!variant) return;
+  // Re-kjør guardrails på redigert tekst så en innredigert påstand ikke slipper gjennom godkjenning.
+  const guardrailFlags = checkGuardrails(`${caption} ${variant.hashtags.join(' ')}`);
+  await db.update(postVariants).set({ caption, guardrailFlags }).where(eq(postVariants.id, variantId));
   revalidatePath('/');
 }
 export async function generateWeek(channelId: string, week: number) {
