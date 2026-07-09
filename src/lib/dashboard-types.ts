@@ -18,6 +18,14 @@ export type WeekPost = {
   variants: WeekVariant[];
 };
 
+export type BrandWeek = {
+  brandSlug: string;
+  brandName: string;
+  color: string | null;
+  weekLabel: string;
+  posts: WeekPost[];
+};
+
 export type TodayItem = {
   postId: string;
   variantId: string;

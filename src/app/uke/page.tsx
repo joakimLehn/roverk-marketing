@@ -1,8 +1,8 @@
 import { db } from '@/db';
 import { posts, channels, brands, calendarTemplates, postVariants } from '@/db/schema';
 import { eq, inArray } from 'drizzle-orm';
-import { WeekBoard } from '@/app/week-board';
-import type { WeekPost, WeekVariant } from '@/lib/dashboard-types';
+import { BrandSwitcher } from '@/app/uke/brand-switcher';
+import { brandColor, type BrandWeek, type WeekPost, type WeekVariant } from '@/lib/dashboard-types';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,13 +19,18 @@ function formatWeekLabel(dates: Date[]): string {
 }
 
 export default async function UkePage() {
-  const [channel] = await db
-    .select({ id: channels.id, brandName: brands.name })
+  const activeChannels = await db
+    .select({
+      id: channels.id,
+      brandSlug: brands.slug,
+      brandName: brands.name,
+      brandColor: brands.color,
+    })
     .from(channels)
     .innerJoin(brands, eq(channels.brandId, brands.id))
     .where(eq(channels.active, true));
 
-  if (!channel) {
+  if (activeChannels.length === 0) {
     return (
       <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-2 p-6 text-center">
         <h1 className="text-xl font-heading font-semibold">Ingen aktiv kanal</h1>
@@ -34,9 +39,12 @@ export default async function UkePage() {
     );
   }
 
+  const channelIds = activeChannels.map((c) => c.id);
+
   const rows = await db
     .select({
       id: posts.id,
+      channelId: posts.channelId,
       scheduledFor: posts.scheduledFor,
       status: posts.status,
       chosenVariantId: posts.chosenVariantId,
@@ -47,7 +55,7 @@ export default async function UkePage() {
     })
     .from(posts)
     .innerJoin(calendarTemplates, eq(posts.templateId, calendarTemplates.id))
-    .where(eq(posts.channelId, channel.id));
+    .where(inArray(posts.channelId, channelIds));
 
   const activeRows = rows.filter((r) => r.status !== 'rejected');
   const postIds = activeRows.map((r) => r.id);
@@ -69,21 +77,39 @@ export default async function UkePage() {
     variantsByPost.set(v.postId, list);
   }
 
-  const weekPosts: WeekPost[] = activeRows
-    .map((r) => ({
-      id: r.id,
-      day: r.day,
-      scheduledFor: new Date(r.scheduledFor).toISOString(),
-      format: r.format,
-      pillar: r.pillar,
-      cta: r.cta,
-      status: r.status,
-      chosenVariantId: r.chosenVariantId,
-      variants: variantsByPost.get(r.id) ?? [],
-    }))
-    .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
+  const rowsByChannel = new Map<string, typeof activeRows>();
+  for (const r of activeRows) {
+    const list = rowsByChannel.get(r.channelId) ?? [];
+    list.push(r);
+    rowsByChannel.set(r.channelId, list);
+  }
 
-  const weekLabel = formatWeekLabel(weekPosts.map((p) => new Date(p.scheduledFor)));
+  const brandWeeks: BrandWeek[] = activeChannels
+    .map((channel) => {
+      const channelRows = rowsByChannel.get(channel.id) ?? [];
+      const weekPosts: WeekPost[] = channelRows
+        .map((r) => ({
+          id: r.id,
+          day: r.day,
+          scheduledFor: new Date(r.scheduledFor).toISOString(),
+          format: r.format,
+          pillar: r.pillar,
+          cta: r.cta,
+          status: r.status,
+          chosenVariantId: r.chosenVariantId,
+          variants: variantsByPost.get(r.id) ?? [],
+        }))
+        .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
 
-  return <WeekBoard posts={weekPosts} brandName={channel.brandName} weekLabel={weekLabel} />;
+      return {
+        brandSlug: channel.brandSlug,
+        brandName: channel.brandName,
+        color: brandColor(channel.brandSlug, channel.brandColor),
+        weekLabel: formatWeekLabel(weekPosts.map((p) => new Date(p.scheduledFor))),
+        posts: weekPosts,
+      };
+    })
+    .sort((a, b) => a.brandName.localeCompare(b.brandName));
+
+  return <BrandSwitcher brands={brandWeeks} />;
 }
