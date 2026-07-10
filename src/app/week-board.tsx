@@ -22,15 +22,67 @@ const STATUS_META: Record<WeekPost['status'], { label: string; dotClass: string;
   rejected: { label: 'Forkastet', dotClass: 'bg-text-muted', textClass: 'text-text-muted' },
 };
 
+const MONTHS = ['jan.', 'feb.', 'mars', 'apr.', 'mai', 'juni', 'juli', 'aug.', 'sep.', 'okt.', 'nov.', 'des.'];
+
 function formatDayDate(day: string, scheduledFor: string): string {
   const date = new Date(scheduledFor);
   const dd = date.getDate();
-  const months = ['jan.', 'feb.', 'mars', 'apr.', 'mai', 'juni', 'juli', 'aug.', 'sep.', 'okt.', 'nov.', 'des.'];
-  return `${day} ${dd}. ${months[date.getMonth()]}`;
+  return `${day} ${dd}. ${MONTHS[date.getMonth()]}`;
 }
 
 function hasGuardrailFlags(post: WeekPost): boolean {
   return post.variants.some((v) => v.guardrailFlags.length > 0);
+}
+
+// Standard ISO 8601 week number.
+function isoWeek(d: Date): number {
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const dayNum = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+  const firstDayNum = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
+  return 1 + Math.round((date.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000));
+}
+
+function getMondayOfWeek(date: Date): Date {
+  const dayNum = (date.getDay() + 6) % 7;
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() - dayNum);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+function formatWeekRange(monday: Date): string {
+  const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+  const startMonth = MONTHS[monday.getMonth()];
+  const endMonth = MONTHS[sunday.getMonth()];
+  if (startMonth === endMonth) {
+    return `${monday.getDate()}.–${sunday.getDate()}. ${startMonth}`;
+  }
+  return `${monday.getDate()}. ${startMonth} – ${sunday.getDate()}. ${endMonth}`;
+}
+
+type WeekGroup = {
+  key: string;
+  isoWeekNum: number;
+  monday: Date;
+  posts: WeekPost[];
+};
+
+function groupPostsByWeek(posts: WeekPost[]): WeekGroup[] {
+  const groups = new Map<string, WeekGroup>();
+  for (const post of posts) {
+    const monday = getMondayOfWeek(new Date(post.scheduledFor));
+    const key = `${monday.getFullYear()}-${monday.getMonth()}-${monday.getDate()}`;
+    let group = groups.get(key);
+    if (!group) {
+      const utcMonday = new Date(Date.UTC(monday.getFullYear(), monday.getMonth(), monday.getDate()));
+      group = { key, isoWeekNum: isoWeek(utcMonday), monday, posts: [] };
+      groups.set(key, group);
+    }
+    group.posts.push(post);
+  }
+  return Array.from(groups.values()).sort((a, b) => a.monday.getTime() - b.monday.getTime());
 }
 
 export function WeekBoard({
@@ -154,52 +206,80 @@ function PostList({
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
+  const groups = useMemo(() => groupPostsByWeek(posts), [posts]);
+  let rowIndex = 0;
+
   return (
-    <ul className="flex flex-col gap-2">
-      {posts.map((post, i) => {
-        const selected = post.id === selectedId;
-        const meta = STATUS_META[post.status];
-        const flagged = hasGuardrailFlags(post);
-        return (
-          <li
-            key={post.id}
-            className="animate-in fade-in slide-in-from-left-1"
-            style={{ animationDelay: `${i * 30}ms`, animationDuration: '250ms', animationFillMode: 'backwards' }}
-          >
-            <button
-              type="button"
-              onClick={() => onSelect(post.id)}
-              aria-current={selected ? 'true' : undefined}
-              className={cn(
-                'flex w-full flex-col gap-1 rounded-xl border px-4 py-3 text-left transition-colors duration-150',
-                selected
-                  ? 'border-accent-gold bg-accent-gold/[0.06]'
-                  : 'border-hairline bg-card hover:bg-secondary/60',
-              )}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-heading text-sm font-medium text-foreground">
-                  {formatDayDate(post.day, post.scheduledFor)}
-                </span>
-                <div className="flex items-center gap-1.5">
-                  {flagged && (
-                    <TriangleAlert
-                      className="size-3.5 text-destructive"
-                      aria-label="Advarsel: en variant har fanget opp en guardrail"
-                    />
+    <div className="flex flex-col gap-2">
+      {groups.map((group, gi) => (
+        <div key={group.key} className="flex flex-col gap-2">
+          <WeekHeader isoWeekNum={group.isoWeekNum} monday={group.monday} isFirst={gi === 0} />
+          {group.posts.map((post) => {
+            const i = rowIndex++;
+            const selected = post.id === selectedId;
+            const meta = STATUS_META[post.status];
+            const flagged = hasGuardrailFlags(post);
+            return (
+              <div
+                key={post.id}
+                className="animate-in fade-in slide-in-from-left-1"
+                style={{ animationDelay: `${i * 30}ms`, animationDuration: '250ms', animationFillMode: 'backwards' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => onSelect(post.id)}
+                  aria-current={selected ? 'true' : undefined}
+                  className={cn(
+                    'flex w-full flex-col gap-1 rounded-xl border px-4 py-3 text-left transition-colors duration-150',
+                    selected
+                      ? 'border-accent-gold bg-accent-gold/[0.06]'
+                      : 'border-hairline bg-card hover:bg-secondary/60',
                   )}
-                  <span className={cn('size-1.5 rounded-full', meta.dotClass)} aria-hidden="true" />
-                  <span className={cn('text-xs font-medium', meta.textClass)}>{meta.label}</span>
-                </div>
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-heading text-sm font-medium text-foreground">
+                      {formatDayDate(post.day, post.scheduledFor)}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {flagged && (
+                        <TriangleAlert
+                          className="size-3.5 text-destructive"
+                          aria-label="Advarsel: en variant har fanget opp en guardrail"
+                        />
+                      )}
+                      <span className={cn('size-1.5 rounded-full', meta.dotClass)} aria-hidden="true" />
+                      <span className={cn('text-xs font-medium', meta.textClass)}>{meta.label}</span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-text-secondary">
+                    {post.format} · {post.pillar}
+                  </span>
+                </button>
               </div>
-              <span className="text-xs text-text-secondary">
-                {post.format} · {post.pillar}
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function WeekHeader({
+  isoWeekNum,
+  monday,
+  isFirst,
+}: {
+  isoWeekNum: number;
+  monday: Date;
+  isFirst: boolean;
+}) {
+  return (
+    <div className={cn('flex items-center gap-3 px-1', isFirst ? 'pb-1 pt-0.5' : 'pb-1 pt-4')}>
+      <span className="whitespace-nowrap text-[11px] font-medium uppercase tracking-wider text-text-muted">
+        Uke {isoWeekNum} · {formatWeekRange(monday)}
+      </span>
+      <span className="h-px flex-1 bg-hairline" aria-hidden="true" />
+    </div>
   );
 }
 
