@@ -14,7 +14,9 @@ export async function generateWeekForChannel(channelId: string, week: number) {
   if (!brand) throw new Error('Ukjent merkevare');
   const facts = brand.productFacts;
   if (!facts) throw new Error(`Merkevare ${brand.slug} mangler product_facts`);
+  // Kalenderuke N legges på N-te kommende uke (uke 1 = neste mandag, uke 2 = +7 dager, osv.)
   const weekStart = nextWeekStart(new Date());
+  weekStart.setUTCDate(weekStart.getUTCDate() + (week - 1) * 7);
 
   for (const t of templates) {
     const { variants, model } = await generateVariants({
